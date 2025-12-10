@@ -6,6 +6,7 @@ import Swal from 'sweetalert2'
 import UserDetails from './User/UserDetails.vue'
 import EditUser from './User/EditUser.vue'
 import CreateUser from './User/CreateUser.vue'
+import EditProfile from './Profiles/EditProfile.vue'
 
 const viewMode = ref('users')
 
@@ -27,6 +28,7 @@ const loadingDetail = ref(false)
 const errorDetail = ref(null)
 
 const editingUserId = ref(null)
+const editingProfileId = ref(null)
 
 
 onMounted(async () => {
@@ -120,8 +122,18 @@ const onUserUpdated = async () => {
     viewMode.value = 'users'
 }
 
+const onEditarPerfil = (profile) => {
+    editingProfileId.value = profile.id
+    viewMode.value = 'editProfile'
+}
 
-const onExcluir = async (user) => {
+const onProfileUpdated = async () => {
+    await loadProfiles()
+    viewMode.value = 'profiles'
+}
+
+
+const onExcluirUser = async (user) => {
     const result = await Swal.fire({
         title: 'Confirmar exclusão',
         text: `Deseja realmente excluir o usuário ${user.nome}?`,
@@ -142,6 +154,30 @@ const onExcluir = async (user) => {
     } catch (err) {
         console.error('Erro ao excluir usuário', err)
         toast.error('Erro ao excluir usuário')
+    }
+}
+
+const onExcluirPerfil = async (profile) => {
+    const result = await Swal.fire({
+        title: 'Confirmar exclusão',
+        text: `Deseja realmente excluir o perfil ${profile.name}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#e74c3c',
+        cancelButtonColor: '#555555',
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
+        await api.delete(`/profiles/${profile.id}`)
+        profiles.value = profiles.value.filter(p => p.id !== profile.id)
+        toast.success('Perfil excluído com sucesso')
+    } catch (err) {
+        console.error('Erro ao excluir perfil', err)
+        toast.error('Erro ao excluir perfil')
     }
 }
 
@@ -203,13 +239,16 @@ const loadAddresses = async () => {
                 </h1>
 
                 <div class="acoes-topo">
-                    <var-button type="default" outline="" class="btn-perfis" :class="{ 'btn-ativo': viewMode === 'users' }" @click="goToUsers">
+                    <var-button type="default" outline="" class="btn-perfis"
+                        :class="{ 'btn-ativo': viewMode === 'users' }" @click="goToUsers">
                         Usuários
                     </var-button>
-                    <var-button type="default" outline="" class="btn-perfis" :class="{ 'btn-ativo': viewMode === 'profiles' }" @click="goToProfiles">
+                    <var-button type="default" outline="" class="btn-perfis"
+                        :class="{ 'btn-ativo': viewMode === 'profiles' }" @click="goToProfiles">
                         Perfis
                     </var-button>
-                    <var-button type="default" outline="" class="btn-perfis" :class="{ 'btn-ativo': viewMode === 'addresses' }" @click="goToAddresses">
+                    <var-button type="default" outline="" class="btn-perfis"
+                        :class="{ 'btn-ativo': viewMode === 'addresses' }" @click="goToAddresses">
                         Endereços
                     </var-button>
                 </div>
@@ -246,7 +285,7 @@ const loadAddresses = async () => {
                                 Editar
                             </var-button>
 
-                            <var-button type="danger" elevation @click="onExcluir(user)">
+                            <var-button type="danger" elevation @click="onExcluirUser(user)">
                                 Excluir
                             </var-button>
                         </td>
@@ -307,7 +346,7 @@ const loadAddresses = async () => {
             </table>
         </div>
 
-        <!-- Detalhes -->
+        <!-- Detalhes User -->
         <div v-else-if="viewMode === 'detail'">
             <h1>Detalhes do Usuário</h1>
             <div v-if="loadingDetail">
@@ -319,14 +358,19 @@ const loadAddresses = async () => {
             <UserDetails v-else-if="selectedUser" :user="selectedUser" @back="onVoltar" />
         </div>
 
-        <!-- Criar -->
+        <!-- Criar User-->
         <div v-else-if="viewMode === 'create'">
             <CreateUser @created="onUserCreated" @cancel="onVoltar" />
         </div>
 
-        <!-- Editar -->
+        <!-- Editar User -->
         <div v-else-if="viewMode === 'edit'">
             <EditUser :user-id="editingUserId" @updated="onUserUpdated" @cancel="onVoltar" />
+        </div>
+
+        <!-- Editar perfil -->
+        <div v-else-if="viewMode === 'editProfile'">
+            <EditProfile :profile-id="editingProfileId" @updated="onProfileUpdated" @cancel="goToProfiles" />
         </div>
     </div>
 </template>
@@ -343,9 +387,9 @@ const loadAddresses = async () => {
 }
 
 .btn-ativo {
-  background-color: #0b2607;
-  color: #fff;
-  border: 1px solid #1f4d1a;
+    background-color: #0b2607;
+    color: #fff;
+    border: 1px solid #1f4d1a;
 }
 
 .topo-lista {
