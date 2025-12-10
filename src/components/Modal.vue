@@ -7,9 +7,11 @@ import UserDetails from './User/UserDetails.vue'
 import EditUser from './User/EditUser.vue'
 import CreateUser from './User/CreateUser.vue'
 import EditProfile from './Profiles/EditProfile.vue'
+import CreateProfile from './Profiles/CreateProfile.vue'
+import CreateAddress from './Addresses/CreateAddress.vue'
+import EditAddresses from './Addresses/EditAddresses.vue'
 
 const viewMode = ref('users')
-
 
 const users = ref([])
 const loading = ref(false)
@@ -29,7 +31,7 @@ const errorDetail = ref(null)
 
 const editingUserId = ref(null)
 const editingProfileId = ref(null)
-
+const editingAddressId = ref(null)
 
 onMounted(async () => {
     loading.value = true
@@ -73,6 +75,15 @@ const onUserCreated = (user) => {
     viewMode.value = 'users'
 }
 
+const onAddressUpdated = async () => {
+    await loadAddresses()
+    viewMode.value = 'addresses'
+}
+
+const onCreateAddress = () => {
+    viewMode.value = 'createAddress'
+}
+
 const onDetalhes = async (user) => {
     viewMode.value = 'detail'
     selectedUser.value = null
@@ -90,6 +101,11 @@ const onDetalhes = async (user) => {
     }
 }
 
+const onUserUpdated = async () => {
+    await loadUsers()
+    viewMode.value = 'users'
+}
+
 const onVoltar = () => {
     viewMode.value = 'users'
     selectedUser.value = null
@@ -98,6 +114,22 @@ const onVoltar = () => {
 const onEditar = (user) => {
     editingUserId.value = user.id
     viewMode.value = 'edit'
+}
+
+const onCreateProfile = () => {
+    viewMode.value = 'createProfile'
+}
+
+const onProfileCreated = async (profile) => {
+    profiles.value.push(profile)
+    await loadProfiles()
+    viewMode.value = 'profiles'
+}
+
+const onAddressCreated = async (address) => {
+    addresses.value.push(address)
+    await loadAddresses()
+    viewMode.value = 'addresses'
 }
 
 const loadUsers = async () => {
@@ -114,12 +146,34 @@ const loadUsers = async () => {
         loading.value = false
     }
 }
-
 onMounted(loadUsers)
 
-const onUserUpdated = async () => {
-    await loadUsers()
-    viewMode.value = 'users'
+const loadProfiles = async () => {
+    loadingProfiles.value = true
+    errorProfiles.value = null
+    try {
+        const { data } = await api.get('/profiles')
+        profiles.value = data.data || data
+    } catch (err) {
+        errorProfiles.value = 'Erro ao carregar perfis'
+        console.error(err)
+    } finally {
+        loadingProfiles.value = false
+    }
+}
+
+const loadAddresses = async () => {
+    loadingAddresses.value = true
+    errorAddresses.value = null
+    try {
+        const { data } = await api.get('/addresses')
+        addresses.value = data.data || data
+    } catch (err) {
+        errorAddresses.value = 'Erro ao carregar endereços'
+        console.error(err)
+    } finally {
+        loadingAddresses.value = false
+    }
 }
 
 const onEditarPerfil = (profile) => {
@@ -127,11 +181,15 @@ const onEditarPerfil = (profile) => {
     viewMode.value = 'editProfile'
 }
 
-const onProfileUpdated = async () => {
+const onEditarProfile = async () => {
     await loadProfiles()
     viewMode.value = 'profiles'
 }
 
+const onEditarAddress = (address) => {
+    editingAddressId.value = address.id
+    viewMode.value = 'editAddress'
+}
 
 const onExcluirUser = async (user) => {
     const result = await Swal.fire({
@@ -181,33 +239,30 @@ const onExcluirPerfil = async (profile) => {
     }
 }
 
-const loadProfiles = async () => {
-    loadingProfiles.value = true
-    errorProfiles.value = null
+const onExcluirAddress = async (address) => {
+    const result = await Swal.fire({
+        title: 'Confirmar exclusão',
+        text: `Deseja realmente excluir o endereço ${address.street}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#e74c3c',
+        cancelButtonColor: '#555555',
+    })
+
+    if (!result.isConfirmed) return
+
     try {
-        const { data } = await api.get('/profiles')
-        profiles.value = data.data || data
+        await api.delete(`/addresses/${address.id}`)
+        addresses.value = addresses.value.filter(a => a.id !== address.id)
+        toast.success('Endereço excluído com sucesso')
     } catch (err) {
-        errorProfiles.value = 'Erro ao carregar perfis'
-        console.error(err)
-    } finally {
-        loadingProfiles.value = false
+        console.error('Erro ao excluir endereço', err)
+        toast.error('Erro ao excluir endereço')
     }
 }
 
-const loadAddresses = async () => {
-    loadingAddresses.value = true
-    errorAddresses.value = null
-    try {
-        const { data } = await api.get('/addresses')
-        addresses.value = data.data || data
-    } catch (err) {
-        errorAddresses.value = 'Erro ao carregar endereços'
-        console.error(err)
-    } finally {
-        loadingAddresses.value = false
-    }
-}
 </script>
 
 <template>
@@ -363,6 +418,16 @@ const loadAddresses = async () => {
             <CreateUser @created="onUserCreated" @cancel="onVoltar" />
         </div>
 
+        <!-- Criar perfil -->
+        <div v-else-if="viewMode === 'createProfile'">
+            <CreateProfile @created="onProfileCreated" @cancel="goToProfiles" />
+        </div>
+
+        <!-- Criar endereço -->
+        <div v-else-if="viewMode === 'createAddress'">
+            <CreateAddress @created="onAddressCreated" @cancel="goToAddresses" />
+        </div>
+
         <!-- Editar User -->
         <div v-else-if="viewMode === 'edit'">
             <EditUser :user-id="editingUserId" @updated="onUserUpdated" @cancel="onVoltar" />
@@ -370,7 +435,12 @@ const loadAddresses = async () => {
 
         <!-- Editar perfil -->
         <div v-else-if="viewMode === 'editProfile'">
-            <EditProfile :profile-id="editingProfileId" @updated="onProfileUpdated" @cancel="goToProfiles" />
+            <EditProfile :profile-id="editingProfileId" @updated="onEditarProfile" @cancel="goToProfiles" />
+        </div>
+
+        <!-- Editar endereço -->
+        <div v-else-if="viewMode === 'editAddress'">
+            <EditAddresses :address-id="editingAddressId" @updated="onAddressUpdated" @cancel="goToAddresses" />
         </div>
     </div>
 </template>

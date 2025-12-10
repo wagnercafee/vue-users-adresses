@@ -104,7 +104,7 @@ const cancelar = () => {
 
         <div class="acoes-form">
             <button class="btn-voltar" @click="cancelar">Cancelar</button>
-            <button class="btn-salvar" @click="salvar">Salvar</button>
+            <button class="btn-salvar" @click="salvar">Criar</button>
         </div>
     </div>
 </template>
@@ -165,14 +165,14 @@ const cancelar = () => {
     border: none;
     border-radius: 4px;
     padding: 6px 14px;
-    background-color: #1f6feb;
+    background-color: #23a539;
     color: #fff;
     font-size: 0.9rem;
     cursor: pointer;
 }
 
 .btn-salvar:hover {
-    background-color: #1653b3;
+    background-color: #10803b;
 }
 
 .form-header {
