@@ -7,11 +7,20 @@ import UserDetails from './User/UserDetails.vue'
 import EditUser from './User/EditUser.vue'
 import CreateUser from './User/CreateUser.vue'
 
-const viewMode = ref('list')
+const viewMode = ref('users')
+
 
 const users = ref([])
 const loading = ref(false)
 const error = ref(null)
+
+const profiles = ref([])
+const loadingProfiles = ref(false)
+const errorProfiles = ref(null)
+
+const addresses = ref([])
+const loadingAddresses = ref(false)
+const errorAddresses = ref(null)
 
 const selectedUser = ref(null)
 const loadingDetail = ref(false)
@@ -39,9 +48,27 @@ const goToCreate = () => {
     viewMode.value = 'create'
 }
 
+const goToUsers = () => {
+    viewMode.value = 'users'
+}
+
+const goToProfiles = async () => {
+    viewMode.value = 'profiles'
+    if (!profiles.value.length) {
+        await loadProfiles()
+    }
+}
+
+const goToAddresses = async () => {
+    viewMode.value = 'addresses'
+    if (!addresses.value.length) {
+        await loadAddresses()
+    }
+}
+
 const onUserCreated = (user) => {
     users.value.push(user)
-    viewMode.value = 'list'
+    viewMode.value = 'users'
 }
 
 const onDetalhes = async (user) => {
@@ -62,7 +89,7 @@ const onDetalhes = async (user) => {
 }
 
 const onVoltar = () => {
-    viewMode.value = 'list'
+    viewMode.value = 'users'
     selectedUser.value = null
 }
 
@@ -90,7 +117,7 @@ onMounted(loadUsers)
 
 const onUserUpdated = async () => {
     await loadUsers()
-    viewMode.value = 'list'
+    viewMode.value = 'users'
 }
 
 
@@ -118,35 +145,88 @@ const onExcluir = async (user) => {
     }
 }
 
+const loadProfiles = async () => {
+    loadingProfiles.value = true
+    errorProfiles.value = null
+    try {
+        const { data } = await api.get('/profiles')
+        profiles.value = data.data || data
+    } catch (err) {
+        errorProfiles.value = 'Erro ao carregar perfis'
+        console.error(err)
+    } finally {
+        loadingProfiles.value = false
+    }
+}
+
+const loadAddresses = async () => {
+    loadingAddresses.value = true
+    errorAddresses.value = null
+    try {
+        const { data } = await api.get('/addresses')
+        addresses.value = data.data || data
+    } catch (err) {
+        errorAddresses.value = 'Erro ao carregar endereços'
+        console.error(err)
+    } finally {
+        loadingAddresses.value = false
+    }
+}
 </script>
 
 <template>
     <div class="componente modal-user">
-        <!-- LISTA -->
-        <template v-if="viewMode === 'list'">
+        <!-- LISTAS (usuários ou perfis) -->
+        <div v-if="viewMode === 'users' || viewMode === 'profiles' || viewMode === 'addresses'">
             <div class="topo-lista">
-                <h1>Usuários</h1>
-                <button class="btn-novo" @click="goToCreate">
+                <var-button type="success" elevation class="btn-novo" @click="goToCreate">
                     + Novo usuário
-                </button>
+                </var-button>
+
+                <h1>
+                    {{
+                        viewMode === 'users'
+                            ? 'Usuários'
+                            : viewMode === 'profiles'
+                                ? 'Perfis'
+                                : 'Endereços'
+                    }}
+                </h1>
+
+                <div class="acoes-topo">
+                    <var-button type="default" outline="" class="btn-perfis" @click="goToUsers">
+                        Usuários
+                    </var-button>
+                    <var-button type="default" outline="" class="btn-perfis" @click="goToProfiles">
+                        Perfis
+                    </var-button>
+                    <var-button type="default" outline="" class="btn-perfis" @click="goToAddresses">
+                        Endereços
+                    </var-button>
+                </div>
             </div>
 
-            <p v-if="loading">Carregando usuários...</p>
-            <p v-else-if="error">{{ error }}</p>
+            <p v-if="viewMode === 'users' && loading">Carregando usuários...</p>
+            <p v-else-if="viewMode === 'users' && error">{{ error }}</p>
 
-            <table v-else class="tabela-usuarios">
+            <!-- tabela usuários -->
+            <table v-if="viewMode === 'users'" class="tabela-usuarios">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Nome</th>
                         <th>Email</th>
+                        <th>Perfil</th>
                         <th>CPF</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="user in users" :key="user.id">
+                        <td>{{ user.id }}</td>
                         <td>{{ user.nome }}</td>
                         <td>{{ user.email }}</td>
+                        <td>{{ user.perfil.name }}</td>
                         <td>{{ user.cpf }}</td>
                         <td class="acoes">
                             <var-button type="primary" elevation @click="onDetalhes(user)">
@@ -164,12 +244,63 @@ const onExcluir = async (user) => {
                     </tr>
                 </tbody>
             </table>
-        </template>
+
+            <!-- tabela perfis -->
+            <table v-else-if="viewMode === 'profiles'" class="tabela-usuarios">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome do Perfil</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="profile in profiles" :key="profile.id">
+                        <td>{{ profile.id }}</td>
+                        <td>{{ profile.name }}</td>
+                        <td class="acoes">
+                            <var-button type="warning" elevation @click="onEditarPerfil(profile)">
+                                Editar
+                            </var-button>
+                            <var-button type="danger" elevation @click="onExcluirPerfil(profile)">
+                                Excluir
+                            </var-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- endereços -->
+            <table v-else class="tabela-usuarios">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Rua</th>
+                        <th>CEP</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="address in addresses" :key="address.id">
+                        <td>{{ address.id }}</td>
+                        <td>{{ address.street }}</td>
+                        <td>{{ address.cep }}</td>
+                        <td class="acoes">
+                            <var-button type="warning" elevation @click="onEditarAddress(address)">
+                                Editar
+                            </var-button>
+                            <var-button type="danger" elevation @click="onExcluirAddress(address)">
+                                Excluir
+                            </var-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Detalhes -->
         <div v-else-if="viewMode === 'detail'">
             <h1>Detalhes do Usuário</h1>
-
             <div v-if="loadingDetail">
                 Carregando detalhes...
             </div>
@@ -179,20 +310,42 @@ const onExcluir = async (user) => {
             <UserDetails v-else-if="selectedUser" :user="selectedUser" @back="onVoltar" />
         </div>
 
+        <!-- Criar -->
         <div v-else-if="viewMode === 'create'">
             <CreateUser @created="onUserCreated" @cancel="onVoltar" />
         </div>
 
+        <!-- Editar -->
         <div v-else-if="viewMode === 'edit'">
             <EditUser :user-id="editingUserId" @updated="onUserUpdated" @cancel="onVoltar" />
         </div>
-
     </div>
 </template>
 
 <style scoped>
 .modal-user {
     min-height: 600px;
+}
+
+.acoes-topo {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+
+.topo-lista {
+    display: flex;
+    align-items: center;
+}
+
+.topo-lista h1 {
+    flex: 1;
+    text-align: center;
+}
+
+.btn-perfis {
+    margin-left: auto;
 }
 
 .tabela-usuarios {
