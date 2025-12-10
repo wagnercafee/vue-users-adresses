@@ -10,6 +10,7 @@ import EditProfile from './Profiles/EditProfile.vue'
 import CreateProfile from './Profiles/CreateProfile.vue'
 import CreateAddress from './Addresses/CreateAddress.vue'
 import EditAddresses from './Addresses/EditAddresses.vue'
+import UserFilter from './User/UserFilter.vue'
 
 const viewMode = ref('users')
 
@@ -32,6 +33,9 @@ const errorDetail = ref(null)
 const editingUserId = ref(null)
 const editingProfileId = ref(null)
 const editingAddressId = ref(null)
+
+const searchLoading = ref(false)
+const hasUserFilter = ref(false)
 
 onMounted(async () => {
     loading.value = true
@@ -263,6 +267,37 @@ const onExcluirAddress = async (address) => {
     }
 }
 
+const searchUsers = async (payload) => {
+    searchLoading.value = true
+    try {
+        const params = {}
+
+        if (payload.name) params.name = payload.name
+        if (payload.cpf) params.cpf = payload.cpf
+        if (payload.from) params.from = payload.from
+        if (payload.to) params.to = payload.to
+
+        hasUserFilter.value = Object.keys(params).length > 0
+
+        const { data } = await api.get('/users/search', { params })
+        users.value = data.data || data
+    } catch (err) {
+        console.error('Erro ao buscar usuários', err.response?.data || err)
+    } finally {
+        searchLoading.value = false
+    }
+}
+
+const clearUsersFilter = async () => {
+    hasUserFilter.value = false
+    await loadUsers()
+}
+
+const formatDateBr = (dateString) => {
+    if (!dateString) return ''
+    return new Date(dateString).toLocaleDateString('pt-BR')
+}
+
 </script>
 
 <template>
@@ -286,10 +321,10 @@ const onExcluirAddress = async (address) => {
                 <h1>
                     {{
                         viewMode === 'users'
-                            ? 'Usuários'
+                            ? (hasUserFilter ? 'Usuários - Filtrados' : 'Usuários')
                             : viewMode === 'profiles'
-                                ? 'Perfis'
-                                : 'Endereços'
+                    ? 'Perfis'
+                    : 'Endereços'
                     }}
                 </h1>
 
@@ -312,93 +347,97 @@ const onExcluirAddress = async (address) => {
             <p v-if="viewMode === 'users' && loading">Carregando usuários...</p>
             <p v-else-if="viewMode === 'users' && error">{{ error }}</p>
 
-            <!-- tabela usuários -->
-            <table v-if="viewMode === 'users'" class="tabela-usuarios">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Email</th>
-                        <th>Perfil</th>
-                        <th>CPF</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="user in users" :key="user.id">
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.nome }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.perfil.name }}</td>
-                        <td>{{ user.cpf }}</td>
-                        <td class="acoes">
-                            <var-button type="primary" elevation @click="onDetalhes(user)">
-                                Detalhes
-                            </var-button>
+            <div class="tabela-wrapper">
+                <!-- tabela usuários -->
+                <table v-if="viewMode === 'users'" class="tabela-usuarios">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Perfil</th>
+                            <th>CPF</th>
+                            <th>Criado em</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="user in users" :key="user.id">
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.nome }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.perfil.name }}</td>
+                            <td>{{ user.cpf }}</td>
+                            <td>{{ formatDateBr(user.created_at) }}</td>
+                            <td class="acoes">
+                                <var-button type="primary" elevation @click="onDetalhes(user)">
+                                    Detalhes
+                                </var-button>
 
-                            <var-button type="warning" elevation @click="onEditar(user)">
-                                Editar
-                            </var-button>
+                                <var-button type="warning" elevation @click="onEditar(user)">
+                                    Editar
+                                </var-button>
 
-                            <var-button type="danger" elevation @click="onExcluirUser(user)">
-                                Excluir
-                            </var-button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                                <var-button type="danger" elevation @click="onExcluirUser(user)">
+                                    Excluir
+                                </var-button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
-            <!-- tabela perfis -->
-            <table v-else-if="viewMode === 'profiles'" class="tabela-usuarios">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome do Perfil</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="profile in profiles" :key="profile.id">
-                        <td>{{ profile.id }}</td>
-                        <td>{{ profile.name }}</td>
-                        <td class="acoes">
-                            <var-button type="warning" elevation @click="onEditarPerfil(profile)">
-                                Editar
-                            </var-button>
-                            <var-button type="danger" elevation @click="onExcluirPerfil(profile)">
-                                Excluir
-                            </var-button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                <!-- tabela perfis -->
+                <table v-else-if="viewMode === 'profiles'" class="tabela-usuarios">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome do Perfil</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="profile in profiles" :key="profile.id">
+                            <td>{{ profile.id }}</td>
+                            <td>{{ profile.name }}</td>
+                            <td class="acoes">
+                                <var-button type="warning" elevation @click="onEditarPerfil(profile)">
+                                    Editar
+                                </var-button>
+                                <var-button type="danger" elevation @click="onExcluirPerfil(profile)">
+                                    Excluir
+                                </var-button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
-            <!-- endereços -->
-            <table v-else class="tabela-usuarios">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Rua</th>
-                        <th>CEP</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="address in addresses" :key="address.id">
-                        <td>{{ address.id }}</td>
-                        <td>{{ address.street }}</td>
-                        <td>{{ address.cep }}</td>
-                        <td class="acoes">
-                            <var-button type="warning" elevation @click="onEditarAddress(address)">
-                                Editar
-                            </var-button>
-                            <var-button type="danger" elevation @click="onExcluirAddress(address)">
-                                Excluir
-                            </var-button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                <!-- endereços -->
+                <table v-else class="tabela-usuarios">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Rua</th>
+                            <th>CEP</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="address in addresses" :key="address.id">
+                            <td>{{ address.id }}</td>
+                            <td>{{ address.street }}</td>
+                            <td>{{ address.cep }}</td>
+                            <td class="acoes">
+                                <var-button type="warning" elevation @click="onEditarAddress(address)">
+                                    Editar
+                                </var-button>
+                                <var-button type="danger" elevation @click="onExcluirAddress(address)">
+                                    Excluir
+                                </var-button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Detalhes User -->
@@ -442,12 +481,17 @@ const onExcluirAddress = async (address) => {
         <div v-else-if="viewMode === 'editAddress'">
             <EditAddresses :address-id="editingAddressId" @updated="onAddressUpdated" @cancel="goToAddresses" />
         </div>
+
+        <!-- Filtros - apenas usuários -->
+        <UserFilter v-if="viewMode === 'users'" @search="searchUsers" @clear="clearUsersFilter" />
     </div>
 </template>
 
 <style scoped>
 .modal-user {
     min-height: 600px;
+    display: flex;
+    flex-direction: column;
 }
 
 .acoes-topo {
@@ -460,6 +504,11 @@ const onExcluirAddress = async (address) => {
     background-color: #0b2607;
     color: #fff;
     border: 1px solid #1f4d1a;
+}
+
+.tabela-wrapper {
+    max-height: 450px;
+    overflow-y: auto;
 }
 
 .topo-lista {
