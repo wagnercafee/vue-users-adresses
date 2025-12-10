@@ -179,8 +179,17 @@ const loadAddresses = async () => {
         <!-- LISTAS (usuários ou perfis) -->
         <div v-if="viewMode === 'users' || viewMode === 'profiles' || viewMode === 'addresses'">
             <div class="topo-lista">
-                <var-button type="success" elevation class="btn-novo" @click="goToCreate">
+                <var-button v-if="viewMode === 'users'" type="success" elevation class="btn-novo" @click="goToCreate">
                     + Novo usuário
+                </var-button>
+
+                <var-button v-else-if="viewMode === 'profiles'" type="success" elevation class="btn-novo"
+                    @click="onCreateProfile">
+                    + Novo perfil
+                </var-button>
+
+                <var-button v-else type="success" elevation class="btn-novo" @click="onCreateAddress">
+                    + Novo endereço
                 </var-button>
 
                 <h1>
@@ -194,13 +203,13 @@ const loadAddresses = async () => {
                 </h1>
 
                 <div class="acoes-topo">
-                    <var-button type="default" outline="" class="btn-perfis" @click="goToUsers">
+                    <var-button type="default" outline="" class="btn-perfis" :class="{ 'btn-ativo': viewMode === 'users' }" @click="goToUsers">
                         Usuários
                     </var-button>
-                    <var-button type="default" outline="" class="btn-perfis" @click="goToProfiles">
+                    <var-button type="default" outline="" class="btn-perfis" :class="{ 'btn-ativo': viewMode === 'profiles' }" @click="goToProfiles">
                         Perfis
                     </var-button>
-                    <var-button type="default" outline="" class="btn-perfis" @click="goToAddresses">
+                    <var-button type="default" outline="" class="btn-perfis" :class="{ 'btn-ativo': viewMode === 'addresses' }" @click="goToAddresses">
                         Endereços
                     </var-button>
                 </div>
@@ -333,6 +342,11 @@ const loadAddresses = async () => {
     margin-left: auto;
 }
 
+.btn-ativo {
+  background-color: #0b2607;
+  color: #fff;
+  border: 1px solid #1f4d1a;
+}
 
 .topo-lista {
     display: flex;
