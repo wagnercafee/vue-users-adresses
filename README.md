@@ -20,7 +20,7 @@ Frontend moderno em **Vue 3** + **Vite** para consumir a **API Users & Addresses
     
 -   **npm 10.9.x**
     
--   API rodando em  `http://localhost:9000`
+-   API rodando em  `http://localhost:3030`
     
 
 ## 🚀 Como rodar o projeto
@@ -31,7 +31,7 @@ Frontend moderno em **Vue 3** + **Vite** para consumir a **API Users & Addresses
 
 `npm  install `
 
-`npm run dev` 
+`npm run dev -- --port 3030` 
 
 ## 🔧 O que acontece:
 
@@ -42,4 +42,4 @@ Frontend moderno em **Vue 3** + **Vite** para consumir a **API Users & Addresses
 
 ## 🌐 URL do Frontend
 
-`http://localhost:5174`
+`http://localhost:3030`
