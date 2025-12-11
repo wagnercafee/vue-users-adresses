@@ -48,8 +48,21 @@ const salvar = async () => {
         toast.success('Usuário criado com sucesso')
         emit('created', user)
     } catch (err) {
-        console.error('Erro ao criar usuário', err.response?.data || err)
-        toast.error('Erro ao criar usuário')
+        const res = err.response
+
+        if (res && res.status === 422 && res.data?.errors) {
+            const errors = res.data.errors
+
+            Object.values(errors).forEach(msgs => {
+                msgs.forEach(msg => toast.error(msg))
+            })
+        } else if (res && res.data?.message) {
+            toast.error(res.data.message)
+        } else {
+            toast.error('Erro inesperado ao salvar usuário')
+        }
+
+        console.error('Erro ao atualizar usuário', res?.data || err)
     }
 }
 
