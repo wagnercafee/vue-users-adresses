@@ -34,7 +34,7 @@ Frontend moderno em **Vue 3** + **Vite** para consumir a **API Users & Addresses
 
 -   `npm i`  - instala todas as dependências
     
--   `npm run dev`  - inicia servidor de desenvolvimento em  **porta 5174**
+-   `npm run dev -- --port 3030`  - inicia servidor de desenvolvimento em  **porta 3030**
     
 
 ## 🌐 URL do Frontend
