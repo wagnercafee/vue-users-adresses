@@ -1,38 +1,45 @@
-# vue-users-adresses
+# # Vue Users & Addresses
 
-This template should help get you started developing with Vue 3 in Vite.
+Frontend moderno em **Vue 3** + **Vite** para consumir a **API Users & Addresses**. Interface responsiva com busca avançada, CRUD completo e notificações.
 
-## Recommended IDE Setup
+## 🛠 Tecnologias
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+-   **Vue 3** 
+    
+-   **Vite** 
+    
+-   **Axios**
+    
+-   **Vue Router**
+    
+-   **Vue Toastification** 
 
-## Recommended Browser Setup
+## ✅ Pré-requisitos
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+-   **Node.js 22.x**
+    
+-   **npm 10.9.x**
+    
+-   API rodando em  `http://localhost:9000`
+    
 
-## Customize configuration
+## 🚀 Como rodar o projeto
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+`git clone https://github.com/wagnercafee/vue-users-adresses.git `
 
-## Project Setup
+`cd vue-users-adresses `
 
-```sh
-npm install
-```
+`npm  install `
 
-### Compile and Hot-Reload for Development
+`npm run serve` 
 
-```sh
-npm run dev
-```
+## 🔧 O que acontece:
 
-### Compile and Minify for Production
+-   `npm i`  - instala todas as dependências
+    
+-   `npm run dev`  - inicia servidor de desenvolvimento em  **porta 5174**
+    
 
-```sh
-npm run build
-```
+## 🌐 URL do Frontend
+
+`http://localhost:5174`
