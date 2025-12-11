@@ -25,9 +25,21 @@ const salvar = async () => {
         toast.success('Endereço criado com sucesso')
         emit('created', address)
     } catch (err) {
-        console.error('Erro ao criar endereço', err)
-        error.value = 'Erro ao criar endereço'
-        toast.error('Erro ao criar endereço')
+        const res = err.response
+
+        if (res && res.status === 422 && res.data?.errors) {
+            // limpa erro geral
+            error.value = null
+
+            // percorre todas as mensagens de validação
+            Object.values(res.data.errors).forEach(msgs => {
+                msgs.forEach(msg => toast.error(msg))
+            })
+        } else {
+            console.error('Erro ao criar endereço', err)
+            error.value = 'Erro ao criar endereço'
+            toast.error('Erro ao criar endereço')
+        }
     } finally {
         loading.value = false
     }
