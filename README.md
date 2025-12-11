@@ -19,9 +19,6 @@ Frontend moderno em **Vue 3** + **Vite** para consumir a **API Users & Addresses
 -   **Node.js 22.x**
     
 -   **npm 10.9.x**
-    
--   API rodando em  `http://localhost:3030`
-    
 
 ## 🚀 Como rodar o projeto
 
@@ -29,7 +26,7 @@ Frontend moderno em **Vue 3** + **Vite** para consumir a **API Users & Addresses
 
 `cd vue-users-adresses `
 
-`npm  install `
+`npm install `
 
 `npm run dev -- --port 3030` 
 
