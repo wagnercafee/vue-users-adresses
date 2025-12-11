@@ -31,7 +31,7 @@ Frontend moderno em **Vue 3** + **Vite** para consumir a **API Users & Addresses
 
 `npm  install `
 
-`npm run serve` 
+`npm run dev` 
 
 ## 🔧 O que acontece:
 
